@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
+// const authRoutes = require('./routes/auth');
+const graphqlAuth = require('./middleware/grapthql-auth');
 const { init: InitIO } = require('./socket');
 const { graphqlHTTP } = require('express-graphql');
 const schema = require('./graphql/schema');
@@ -42,6 +43,8 @@ app.use((req, res, next) => {
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
 });
+
+app.use(graphqlAuth);
 
 app.use('/graphql', graphqlHTTP({
     schema: schema,

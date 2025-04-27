@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const Post = require('../models/post');
 const bcrypt = require('bcryptjs');
 const { isEmail, isEmpty, isLength } = require('validator');
 const jwt = require('jsonwebtoken');
@@ -34,6 +35,37 @@ module.exports = {
             throw err;
         }
     },
+    posts: async ({ page }, req) => {
+        if (!req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+        const currentPage = page || 1;
+        const itemsPerPage = 2;
+        let totalItems
+        try {
+          totalItems = await Post.find().countDocuments()
+          const posts = await Post.find().populate('creator').skip((currentPage - 1) * itemsPerPage).limit(itemsPerPage);
+          return {
+            message: 'Posts fetched successfully!',
+            posts: posts.map(post => {
+                return {
+                    ...post._doc,
+                    _id: post._id.toString(),
+                    createdAt: post.createdAt.toISOString(),
+                    updatedAt: post.updatedAt.toISOString(),
+                }
+            }),
+            totalItems: totalItems
+          }
+        } catch (err) {
+            if (!err.code) {
+            err.message = 'An error occurred';
+            err.code = 500;
+            }
+        }
+    },
     createUser: async ({ userInput }) => {
         let error
         if (!isEmail(userInput.email)) {
@@ -60,6 +92,41 @@ module.exports = {
         });
         const createdUser = await user.save();
         return { ...createdUser._doc, _id: createdUser._id.toString() };
+    },
+    createPost: async ({ postInput }, req) => {
+        console.log('postInput', postInput);
+        let error
+        if (!req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+        if (isEmpty(postInput.title) || isEmpty(postInput.imageUrl) || isEmpty(postInput.content)) {
+            error = new Error('Invalid input');
+            error.code = 422;
+            throw error;
+        }
+        const post = new Post({
+            title: postInput.title,
+            imageUrl: postInput.imageUrl,
+            content: postInput.content,
+            creator: req.userId
+        });
+        try {
+            await post.save()
+            const user = await User.findById(req.userId)
+            creator = user;
+            user.posts.push(post);
+            await user.save();
+            return {
+                message: 'Post created successfully!',
+                post: { ...post._doc, _id: post._id.toString(), createdAt: post.createdAt.toISOString(), updatedAt: post.updatedAt.toISOString() },
+                creator: { _id: creator._id, name: creator.name }
+            }
+        } catch (err) {
+            if (!err.statusCode)  err.statusCode = 500;
+            throw err;
+        }
     }
 };
 

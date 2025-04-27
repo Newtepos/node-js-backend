@@ -1,4 +1,4 @@
-const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInputObjectType, GraphQLID, GraphQLList } = require('graphql');
+const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInputObjectType, GraphQLID, GraphQLList, GraphQLInt } = require('graphql');
 
 
 const UserInputType = new GraphQLInputObjectType({
@@ -18,6 +18,39 @@ const LoginType = new GraphQLObjectType({
     })
 });
 
+const PostInputType = new GraphQLInputObjectType({
+    name: 'PostInput',
+    fields: () => ({
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        imageUrl: { type: new GraphQLNonNull(GraphQLString) },
+        content: { type: new GraphQLNonNull(GraphQLString) },
+    })
+});
+
+const createPostType = new GraphQLObjectType({
+    name: 'createPostType',
+    fields: () => ({
+        message: { type: GraphQLString },
+        post: { type: PostType },
+        creator: { type: new GraphQLObjectType({
+            name: 'creator',
+            fields: () => ({
+                _id: { type: GraphQLID },
+                name: { type: GraphQLString }
+            })
+        })}
+    })
+});
+
+const getPostsType = new GraphQLObjectType({
+    name: 'getPostsType',
+    fields: () => ({
+        message: { type: GraphQLString },
+        posts: { type: new GraphQLList(PostType) },
+        totalItems: { type: GraphQLInt }
+    })
+});
+
 const PostType = new GraphQLObjectType({
     name: 'Post',
     fields: () => ({
@@ -25,7 +58,7 @@ const PostType = new GraphQLObjectType({
         title: { type: GraphQLString },
         content: { type: GraphQLString },
         imageUrl: { type: GraphQLString },
-        creater: { type: UserType },
+        creator: { type: UserType },
         createdAt: { type: GraphQLString },
         updatedAt: { type: GraphQLString },
     })
@@ -53,6 +86,12 @@ const schema = new GraphQLSchema({
                     email: { type: new GraphQLNonNull(GraphQLString) },
                     password: { type: new GraphQLNonNull(GraphQLString) }
                 }
+            },
+            posts: {
+                type: getPostsType,
+                args: {
+                    page: { type: GraphQLInt }
+                }
             }
         }
     }),
@@ -64,6 +103,12 @@ const schema = new GraphQLSchema({
                 args: {
                     userInput: { type: new GraphQLNonNull(UserInputType) }
                 },
+            },
+            createPost: {
+                type: createPostType,
+                args: {
+                    postInput: { type: new GraphQLNonNull(PostInputType) }
+                }
             }
         }
     })
