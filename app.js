@@ -69,7 +69,7 @@ app.use((error, req, res, next) => {
     res.status(status).json({ message: message, data: data });
 });
 
-mongoose.connect('mongodb+srv://newtepos:0gkyVS7qxqA15308@cluster0.z8ji3.mongodb.net/messages?retryWrites=true&w=majority&appName=cluster0')
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.z8ji3.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority&appName=cluster0`)
 .then(result => {
     // console.log('Connected to MongoDB');
     // const server = app.listen(8080);
