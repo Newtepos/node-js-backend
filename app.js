@@ -77,7 +77,7 @@ mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PA
     // io.on('connection', socket => {
     //     console.log('Client connected');
     // });
-    app.listen(8080);
+    app.listen(process.env.PORT || 8080);
 })
 .catch(err => {
     console.log(err);
